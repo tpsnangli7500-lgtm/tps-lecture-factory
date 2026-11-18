@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>TPS Lecture Factory Web</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <style>
+      :root{
+        --bg:#eef1f5; --panel:#ffffff; --panel2:#f6f8fa; --ink:#17222e; --muted:#5a6a7a;
+        --line:#d7dee6; --navy:#0e2a47; --navy2:#12365c; --gold:#b8860b; --gold-soft:#f3e5bd;
+        --teal:#0f766e; --teal-dark:#053a30; --teal-bar:#14b8a6; --ok:#177245; --ok-bg:#e2f2e8;
+        --warn-bg:#fdf3e0; --warn:#8a5a00; --danger:#b3261e; --chip:#e8edf3;
+        --shadow:0 1px 3px rgba(14,42,71,.10),0 4px 14px rgba(14,42,71,.06);
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#0b1119; --panel:#131e2c; --panel2:#0f1826; --ink:#e7edf4; --muted:#9db0c3;
+          --line:#2a3a4f; --navy:#1d4066; --navy2:#26507e; --gold:#d9a521; --gold-soft:#3a2f10;
+          --chip:#1c2c42; --ok-bg:#123324; --warn-bg:#3a2c10; --warn:#e8c37a;
+          --shadow:0 1px 3px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+        }
+      }
+      *{box-sizing:border-box}
+      html{-webkit-text-size-adjust:100%}
+      body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}
+      button,[role="button"],select,summary,input:not([type="checkbox"],[type="radio"]){min-height:2.25rem}
+      button{font:inherit;cursor:pointer}
+      .wrap{max-width:1120px;margin:0 auto;padding:18px 16px 64px}
+      h1{font-size:1.55rem;line-height:1.25;margin:0 0 4px;letter-spacing:-.01em}
+      h2{font-size:1.18rem;margin:0 0 8px}
+      h3{font-size:1.02rem;margin:0 0 6px}
+      p{margin:0 0 10px}
+      .muted{color:var(--muted)}
+      .small{font-size:.86rem}
+      .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+      .card.flat{box-shadow:none}
+      label.flabel{display:block;font-weight:600;font-size:.9rem;margin:12px 0 5px}
+      label.flabel:first-child{margin-top:0}
+      input[type="text"],input[type="file"],select,textarea{
+        width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--panel);
+        color:var(--ink);font:inherit;font-size:.95rem}
+      textarea{line-height:1.55;resize:vertical}
+      textarea.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86rem}
+      input:focus,select:focus,textarea:focus{outline:2px solid var(--teal-bar);outline-offset:1px;border-color:var(--teal)}
+      .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+      .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+      .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+      @media (max-width:720px){.grid2,.grid3{grid-template-columns:1fr}}
+      .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 16px;border-radius:7px;
+        border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:600;font-size:.93rem;text-decoration:none}
+      .btn:hover{background:var(--navy2)}
+      .btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+      .btn.ghost{background:transparent;color:var(--navy);border-color:var(--line)}
+      @media (prefers-color-scheme: dark){.btn.ghost{color:var(--ink)}}
+      .btn.ghost:hover{background:var(--chip)}
+      .btn.teal{background:var(--teal);border-color:var(--teal)}
+      .btn.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+      .btn.sm{padding:5px 11px;font-size:.86rem;min-height:2.1rem}
+      .btn[disabled]{opacity:.45;cursor:not-allowed}
+      .btn.approved{background:var(--ok);border-color:var(--ok)}
+      /* dashboard */
+      .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+      .proj-card{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:16px}
+      .proj-card h3{font-size:1.08rem;margin-bottom:2px}
+      .bar{height:9px;background:var(--chip);border-radius:99px;overflow:hidden;margin:10px 0 6px}
+      .bar>i{display:block;height:100%;background:var(--teal);border-radius:99px}
+      .packchips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}
+      .pchip{font-size:.8rem;font-weight:600;padding:4px 9px;border-radius:99px;background:var(--chip);color:var(--muted)}
+      .pchip b{color:var(--ink)}
+      .pchip.done{background:var(--ok-bg);color:var(--ok)}
+      .empty{border:1.5px dashed var(--line);border-radius:10px;padding:26px 18px;text-align:center;color:var(--muted);background:var(--panel2)}
+      /* project header + packs */
+      .backbtn{margin-bottom:12px}
+      .packtabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
+      .packtab{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:8px 18px;font-weight:700;font-size:1rem;min-width:64px}
+      .packtab small{display:block;font-weight:500;font-size:.72rem;color:var(--muted)}
+      .packtab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+      .packtab.on small{color:#bcd2ea}
+      /* stations stepper */
+      .steps{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0}
+      .stepbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+        border-radius:8px;padding:7px 12px;font-weight:600;font-size:.88rem;text-align:left}
+      .stepbtn .n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;
+        background:var(--chip);font-size:.78rem;font-weight:700;flex:none}
+      .stepbtn.on{border-color:var(--navy);background:var(--navy);color:#fff}
+      .stepbtn.on .n{background:var(--gold);color:#fff}
+      .stepbtn.done .n{background:var(--ok);color:#fff}
+      .stepbtn .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex:none}
+      /* station panel */
+      .station-head{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between}
+      .badge{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+        padding:3px 9px;border-radius:99px;background:var(--gold-soft);color:var(--warn)}
+      .badge.ok{background:var(--ok-bg);color:var(--ok)}
+      .notebox{background:var(--warn-bg);border-radius:8px;padding:11px 13px;font-size:.9rem;margin:12px 0}
+      .okbox{background:var(--ok-bg);border-radius:8px;padding:11px 13px;font-size:.9rem;margin:12px 0}
+      .preview{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:16px;max-height:430px;overflow:auto}
+      .preview h2{font-size:1.15rem;color:var(--navy);border-bottom:2px solid var(--gold);padding-bottom:5px}
+      @media (prefers-color-scheme: dark){.preview h2{color:var(--gold)}}
+      .preview h4{margin:14px 0 4px;font-size:1rem}
+      .preview ul,.preview ol{margin:4px 0 10px;padding-left:22px}
+      .preview li{margin-bottom:3px}
+      canvas.stage{width:100%;height:auto;border:1px solid var(--line);border-radius:8px;background:#fff;display:block}
+      /* slides preview */
+      .slideprev{aspect-ratio:16/9;background:#0e2a47;color:#fff;border-radius:8px;padding:5.5% 6%;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+      .slideprev:before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--gold)}
+      .slideprev .slogo{position:absolute;top:10px;right:14px;font-weight:700;color:var(--gold);font-size:.95rem}
+      .slideprev h3{font-size:clamp(1.05rem,3.4vw,1.7rem);margin:4px 0 10px;color:#fff}
+      .slideprev .sbody{font-size:clamp(.8rem,2.2vw,1.02rem);color:#dbe7f5;white-space:pre-wrap}
+      .slideprev .snum{position:absolute;bottom:10px;right:14px;font-size:.8rem;color:#9db8d6}
+      /* handwritten preview */
+      .hwpage{background:#fffdf4;color:#22335c;border:1px solid var(--line);border-radius:6px;padding:20px 20px 34px;position:relative;
+        font-family:"Kalam",cursive;font-size:1.06rem;line-height:1.9;white-space:pre-wrap;overflow:hidden;
+        background-image:repeating-linear-gradient(#fffdf4 0,#fffdf4 30px,#dbe7f7 31px)}
+      .hwpage .hwlogo{position:absolute;top:10px;right:12px;background:#0e2a47;color:#f5c542;border-radius:50%;
+        width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Sans",sans-serif;font-weight:700;font-size:.8rem;border:2px solid #f5c542}
+      .hwpage .hwwm{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;color:rgba(14,42,71,.05);
+        transform:rotate(-24deg);font-family:"IBM Plex Sans",sans-serif;font-weight:700;pointer-events:none}
+      .hwpage .hwpageno{position:absolute;bottom:8px;right:16px;font-size:.85rem;color:#7a6a3a}
+      .hwpage .hwhead{font-size:.82rem;color:#8a5a00;font-family:"IBM Plex Sans",sans-serif;font-weight:600;margin-bottom:8px}
+      /* publish checklist */
+      .checkitem{display:flex;gap:11px;align-items:flex-start;width:100%;text-align:left;background:var(--panel2);
+        border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-bottom:8px;color:var(--ink);font-size:.95rem}
+      .checkitem .box{flex:none;width:24px;height:24px;border-radius:6px;border:2px solid var(--muted);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;margin-top:1px}
+      .checkitem.done .box{background:var(--ok);border-color:var(--ok)}
+      .checkitem.done .ctext{color:var(--muted);text-decoration:line-through}
+      .copyblock{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:13px;white-space:pre-wrap;font-size:.9rem;max-height:260px;overflow:auto}
+      #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;
+        padding:11px 18px;border-radius:8px;font-size:.92rem;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:60;max-width:92vw;text-align:center;box-shadow:var(--shadow)}
+      #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+      .divider{border:none;border-top:1px solid var(--line);margin:16px 0}
+      .stationfoot{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;margin-top:18px}
+      @media (prefers-reduced-motion: reduce){#toast{transition:none}}
+    </style>
+  </head>
+  <body>
+    <main class="wrap" id="app"></main>
+    <div id="toast" role="status"></div>
+
+    <script>
+    "use strict";
+    /* ============ TPS Lecture Factory Web — static, projects save in this browser ============ */
+    var LS_KEY = "tpslfw_v1";
+    var STATIONS = [
+      {id:"notes",      name:"Notes",          hi:"Notes Desk"},
+      {id:"diagram",    name:"Diagram",        hi:"Diagram Desk"},
+      {id:"handwritten",name:"Handwritten",    hi:"Handwritten Desk"},
+      {id:"slides",     name:"Slides",         hi:"Slides Desk"},
+      {id:"script",     name:"Script & SRT",   hi:"Script & Subtitle Desk"},
+      {id:"video",      name:"Video Pack",     hi:"Video Desk"},
+      {id:"thumbnail",  name:"Thumbnail",      hi:"Thumbnail Desk"},
+      {id:"publish",    name:"Publish",        hi:"Publish Desk"}
+    ];
+    var PACKS = ["A","B","C","D","E"];
+    var PUBLISH_ITEMS = [
+      "Notes EN + Hindi dono ready aur approve hain",
+      "Diagram notes me jud gaya hai, watermark check kiya",
+      "Handwritten PDF (EN + HI) download ho gaya",
+      "Slides PPTX (Navy/Gold) download ho gaya",
+      "Script EN + HI aur dono .srt subtitle files ready hain",
+      "Video Pack .zip Babu ke FFmpeg render ke liye bhej diya / rakh liya",
+      "Thumbnail PNG (EN + HI dono version) ready hai",
+      "YouTube par playlist order: A-EN → A-HI → B-EN → B-HI …",
+      "Dono subtitle tracks (.srt EN + HI) video par lagaye",
+      "Saari files OneDrive par upload aur count verify (har subject 40 files)"
+    ];
+
+    function blankPack(){
+      return {
+        chapters:"", topic:"", keyPoints:"",
+        notesEN:"", notesHI:"",
+        diagramType:"classification", diagramLabels:"", diagramInNotes:false,
+        hwLang:"EN", hwPage:0,
+        slides:[], scriptEN:"", scriptHI:"", srtEN:"", srtHI:"",
+        thumbLang:"EN", thumbPhoto:"",
+        publishChecks:PUBLISH_ITEMS.map(function(){return false}),
+        approved:{notes:false,diagram:false,handwritten:false,slides:false,script:false,video:false,thumbnail:false,publish:false}
+      };
+    }
+    function blankProject(subject, code, year){
+      var p = {id:"p"+Date.now().toString(36)+Math.floor(Math.random()*999), subject:subject, code:code, year:year, created:Date.now(), packs:{}};
+      PACKS.forEach(function(k){ p.packs[k]=blankPack(); });
+      return p;
+    }
+    var S = { projects:[], cur:null, pack:"A", station:"notes" };
+    function save(){
+      try{ localStorage.setItem(LS_KEY, JSON.stringify({projects:S.projects, cur:S.cur, pack:S.pack})); }catch(e){}
+    }
+    function load(){
+      try{
+        var raw = localStorage.getItem(LS_KEY);
+        if(raw){ var d = JSON.parse(raw); S.projects = d.projects||[]; S.cur = d.cur||null; S.pack = d.pack||"A"; }
+      }catch(e){}
+      // heal any missing fields from older saves
+      S.projects.forEach(function(p){ PACKS.forEach(function(k){ var b=blankPack(); for(var f in b){ if(p.packs[k][f]===undefined) p.packs[k][f]=b[f]; } }); });
+    }
+    function proj(){ return S.projects.find(function(p){return p.id===S.cur;}) || null; }
+    function pack(){ var p=proj(); return p ? p.packs[S.pack] : null; }
+    function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+    function toast(msg){
+      var t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show");
+      clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove("show"); },2600);
+    }
+    function packProgress(pk){ var n=0; STATIONS.forEach(function(st){ if(pk.approved[st.id]) n++; }); return Math.round(n/STATIONS.length*100); }
+    function projProgress(p){ var t=0; PACKS.forEach(function(k){ t+=packProgress(p.packs[k]); }); return Math.round(t/PACKS.length); }
+    function hasContent(pk, id){
+      switch(id){
+        case "notes": return !!pk.notesEN.trim();
+        case "diagram": return !!pk.diagramLabels.trim();
+        case "handwritten": return !!pk.notesEN.trim();
+        case "slides": return pk.slides.length>0;
+        case "script": return !!pk.scriptEN.trim();
+        case "video": return !!pk.scriptEN.trim() && pk.slides.length>0;
+        case "thumbnail": return !!pk.topic.trim();
+        case "publish": return pk.publishChecks.some(Boolean);
+      } return false;
+    }
+    function download(name, blob){
+      var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },400);
+    }
+    function dlText(name, text, type){ download(name, new Blob([text],{type:(type||"text/plain")+";charset=utf-8"})); }
+    function fileBase(){ var p=proj(), pk=pack(); return (p.code||"TPS")+"_Pack-"+S.pack+"_"+(pk.topic||"Lecture").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-"); }
+    </script>
+
+    <script>
+    "use strict";
+    /* ================= Notes / Script generation (fixed TPS format) ================= */
+    var DEFAULT_SECTIONS = [
+      ["Definition and Introduction",""],
+      ["Classification",""],
+      ["Mechanism of Action",""],
+      ["Dose and Administration",""],
+      ["Therapeutic Uses",""],
+      ["Adverse Effects",""],
+      ["Contraindications and Precautions",""],
+      ["Storage and Patient Counselling",""]
+    ];
+    var HI_HEADINGS = {
+      "Definition and Introduction":"परिभाषा और परिचय",
+      "Classification":"वर्गीकरण",
+      "Mechanism of Action":"क्रिया विधि (Mechanism of Action)",
+      "Dose and Administration":"खुराक और देने की विधि",
+      "Therapeutic Uses":"चिकित्सीय उपयोग",
+      "Adverse Effects":"दुष्प्रभाव",
+      "Contraindications and Precautions":"विपरीत संकेत और सावधानियाँ",
+      "Storage and Patient Counselling":"भंडारण और रोगी परामर्श"
+    };
+    function parseKeyPoints(raw){
+      var lines = String(raw||"").split(/\n/).map(function(s){return s.trim();}).filter(Boolean);
+      if(!lines.length) return DEFAULT_SECTIONS.slice();
+      return lines.map(function(l){
+        var m = l.split(/\s*[:—–-]\s*/);
+        if(m.length>1 && m[0].length<70) return [m[0].trim(), m.slice(1).join(" - ").trim()];
+        return [l.replace(/^[\d.)\-\*•\s]+/,"").trim() || l, ""];
+      });
+    }
+    function buildNotesEN(){
+      var p=proj(), pk=pack(); if(!pk.topic.trim()){ toast("Pehle Topic likho — bina topic ke notes nahi banenge."); return; }
+      var topic=pk.topic.trim(), secs=parseKeyPoints(pk.keyPoints), out=[];
+      out.push("# "+topic);
+      out.push(p.code+" · "+p.subject+" · Pack "+S.pack+(pk.chapters?(" · Chapters: "+pk.chapters):""));
+      out.push("");
+      out.push("## Introduction");
+      out.push(topic+" is an important topic of "+p.subject+" ("+p.code+"). In this lecture pack we will study it step by step — definition, classification, mechanism, dose, uses and side effects — in simple language, exactly in the order asked in D.Pharm examinations. Read every heading carefully; the Yaad Rakho box and the 10 exam questions at the end are made from these same points.");
+      secs.forEach(function(s,i){
+        out.push("");
+        out.push("## "+(i+1)+". "+s[0]);
+        if(s[1]) out.push(s[1]);
+        out.push("Key points of "+s[0].toLowerCase()+" in relation to "+topic+": this part is frequently asked in examinations, so learn it with the classification / steps written in your own words. Revise it together with the diagram of this pack — the diagram is drawn from these same headings.");
+      });
+      out.push("");
+      out.push("## Yaad Rakho (Remember)");
+      secs.forEach(function(s){ out.push("- "+s[0]+(s[1]?(": "+s[1]):"")); });
+      out.push("");
+      out.push("## Practice Karo");
+      out.push("1. "+topic+" ki definition apne shabdon me likho.");
+      out.push("2. Is pack ka diagram bina dekhe dobara banao aur labels check karo.");
+      out.push("3. Neeche diye 10 prashno ke uttar pehle bole me, phir likh kar do.");
+      out.push("");
+      out.push("## Summary");
+      out.push("Is pack me humne "+topic+" ko poori tarah padha — "+secs.map(function(s){return s[0];}).join(", ")+". Ye saare points mila kar is topic ka complete exam answer banta hai.");
+      out.push("");
+      out.push("## 10 Important Exam Questions");
+      var qt = [
+        "Define "+topic+" and give its classification with examples.",
+        "Explain the mechanism of action involved in "+topic+".",
+        "Write the dose and method of administration related to "+topic+".",
+        "Enumerate the therapeutic uses of "+topic+".",
+        "Write the adverse effects and contraindications of "+topic+"."
+      ];
+      for(var i=0;i<10;i++){
+        if(i<5) out.push((i+1)+". "+qt[i]);
+        else out.push((i+1)+". Write a short note on: "+secs[(i-5)%secs.length][0]+" (in reference to "+topic+").");
+      }
+      pk.notesEN = out.join("\n"); pk.approved.notes=false; save(); render();
+      toast("English notes ready — padho, edit karo, phir Approve karo.");
+    }
+    function buildNotesHI(){
+      var p=proj(), pk=pack(); if(!pk.notesEN.trim()){ toast("Pehle English notes banao — Hindi version unhi se banta hai."); return; }
+      var topic=pk.topic.trim(), secs=parseKeyPoints(pk.keyPoints), out=[];
+      out.push("# "+topic);
+      out.push(p.code+" · "+p.subject+" · पैक "+S.pack+(pk.chapters?(" · अध्याय: "+pk.chapters):""));
+      out.push("");
+      out.push("## परिचय");
+      out.push(topic+" "+p.subject+" ("+p.code+") का एक महत्वपूर्ण विषय है। इस लेक्चर पैक में हम इसे क्रम से पढ़ेंगे — परिभाषा, वर्गीकरण, क्रिया विधि, खुराक, उपयोग और दुष्प्रभाव — बिल्कुल सरल भाषा में, उसी क्रम में जैसा D.Pharm की परीक्षा में पूछा जाता है। अंत में दिया गया 'याद रखो' बॉक्स और 10 परीक्षा प्रश्न इन्हीं बिंदुओं से बने हैं।");
+      secs.forEach(function(s,i){
+        var h = HI_HEADINGS[s[0]] || s[0];
+        out.push("");
+        out.push("## "+(i+1)+". "+h);
+        if(s[1]) out.push(s[1]);
+        out.push(topic+" के संदर्भ में "+h+" के मुख्य बिंदु: यह भाग परीक्षा में बार-बार पूछा जाता है, इसलिए इसे अपने शब्दों में लिखकर याद करो। इस पैक के डायग्राम के साथ इसे दोहराओ — डायग्राम इन्हीं शीर्षकों से बना है।");
+      });
+      out.push("");
+      out.push("## याद रखो");
+      secs.forEach(function(s){ out.push("- "+(HI_HEADINGS[s[0]]||s[0])+(s[1]?(": "+s[1]):"")); });
+      out.push("");
+      out.push("## अभ्यास करो");
+      out.push("1. "+topic+" की परिभाषा अपने शब्दों में लिखो।");
+      out.push("2. इस पैक का डायग्राम बिना देखे दोबारा बनाओ और लेबल जाँचो।");
+      out.push("3. नीचे दिए 10 प्रश्नों के उत्तर पहले बोलकर, फिर लिखकर दो।");
+      out.push("");
+      out.push("## सारांश");
+      out.push("इस पैक में हमने "+topic+" को पूरी तरह पढ़ा — "+secs.map(function(s){return HI_HEADINGS[s[0]]||s[0];}).join(", ")+"। ये सारे बिंदु मिलकर इस विषय का संपूर्ण परीक्षा-उत्तर बनाते हैं।");
+      out.push("");
+      out.push("## 10 महत्वपूर्ण परीक्षा प्रश्न");
+      var qt = [
+        topic+" को परिभाषित करो और उदाहरण सहित इसका वर्गीकरण दो।",
+        topic+" से संबंधित क्रिया विधि (mechanism of action) समझाओ।",
+        topic+" से संबंधित खुराक और देने की विधि लिखो।",
+        topic+" के चिकित्सीय उपयोग गिनाओ।",
+        topic+" के दुष्प्रभाव और विपरीत संकेत लिखो।"
+      ];
+      for(var i=0;i<10;i++){
+        if(i<5) out.push((i+1)+". "+qt[i]);
+        else out.push((i+1)+". संक्षिप्त टिप्पणी लिखो: "+(HI_HEADINGS[secs[(i-5)%secs.length][0]]||secs[(i-5)%secs.length][0])+" ("+topic+" के संदर्भ में)।");
+      }
+      pk.notesHI = out.join("\n"); save(); render();
+      toast("Hindi notes ready (Devanagari) — check karke rakho.");
+    }
+    function renderNotesPreview(text){
+      var html="", list=null;
+      function closeList(){ if(list){ html+="</"+list+">"; list=null; } }
+      String(text||"").split(/\n/).forEach(function(line){
+        var t=line.trim();
+        if(!t){ closeList(); return; }
+        if(t.indexOf("# ")===0){ closeList(); html+="<h2>"+esc(t.slice(2))+"</h2>"; return; }
+        if(t.indexOf("## ")===0){ closeList(); html+="<h4>"+esc(t.slice(3))+"</h4>"; return; }
+        if(/^- /.test(t)){ if(list!=="ul"){ closeList(); html+="<ul>"; list="ul"; } html+="<li>"+esc(t.slice(2))+"</li>"; return; }
+        if(/^\d+\.\s/.test(t)){ if(list!=="ol"){ closeList(); html+="<ol>"; list="ol"; } html+="<li>"+esc(t.replace(/^\d+\.\s/,""))+"</li>"; return; }
+        closeList(); html+="<p>"+esc(t)+"</p>";
+      });
+      closeList(); return html || '<p class="muted">Abhi kuch nahi hai.</p>';
+    }
+    function notesToDocHTML(text, title){
+      var body = renderNotesPreview(text);
+      return '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>'+esc(title)+'</title></head><body style="font-family:Calibri,Arial,sans-serif">'+body+'<p style="color:#888;font-size:10pt">TPS Pharmacy Lab · TPS Lecture Factory</p></body></html>';
+    }
+    function downloadNotesWord(lang){
+      var pk=pack(); var text = lang==="HI"?pk.notesHI:pk.notesEN;
+      if(!text.trim()){ toast("Pehle notes banao."); return; }
+      download(fileBase()+"_Notes-"+lang+".doc", new Blob(["\ufeff"+notesToDocHTML(text, pk.topic)],{type:"application/msword"}));
+      toast("Word file download ho gayi ("+lang+").");
+    }
+    function downloadNotesPDF(lang){
+      var pk=pack(); var text = lang==="HI"?pk.notesHI:pk.notesEN;
+      if(!text.trim()){ toast("Pehle notes banao."); return; }
+      if(!(window.jspdf && window.jspdf.jsPDF)){ toast("PDF library load nahi hui — Word download use karo."); return; }
+      var doc = new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+      var lines = doc.splitTextToSize(stripMarks(text), 500);
+      var y=56; doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text(pk.topic||"Notes", 48, y); y+=14;
+      doc.setFont("helvetica","normal"); doc.setFontSize(10.5);
+      lines.slice(1).forEach(function(l){
+        if(y>790){ doc.addPage(); y=56; }
+        doc.text(l, 48, y); y+=15;
+      });
+      addPdfFooter(doc);
+      doc.save(fileBase()+"_Notes-"+lang+".pdf");
+      toast("PDF download ho gaya ("+lang+").");
+    }
+    function stripMarks(t){ return String(t||"").replace(/^#{1,2}\s*/gm,""); }
+    function addPdfFooter(doc){
+      var n = doc.getNumberOfPages();
+      for(var i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8); doc.setTextColor(140);
+        doc.text("TPS Pharmacy Lab · Page "+i+" / "+n, 48, 822); doc.setTextColor(0); }
+    }
+    /* ---- Script + SRT ---- */
+    function buildScripts(){
+      var p=proj(), pk=pack();
+      if(!pk.notesEN.trim()){ toast("Pehle Notes Desk se notes banao — script unhi se banti hai."); return; }
+      var secs=parseKeyPoints(pk.keyPoints), topic=pk.topic.trim();
+      var en=[], hi=[];
+      en.push("Welcome to TPS Pharmacy Lab. In this lecture we will study "+topic+", from "+p.subject+", "+p.code+", Pack "+S.pack+".");
+      en.push("Let us begin with the introduction. "+topic+" is an important exam topic, and we will cover it step by step, in simple language.");
+      secs.forEach(function(s,i){
+        en.push("Point number "+(i+1)+": "+s[0]+". "+(s[1]?s[1]+". ":"")+"Remember this part carefully, because it is frequently asked in the examination. Look at the diagram on your screen while you listen.");
+      });
+      en.push("Now the Yaad Rakho summary. "+secs.map(function(s){return s[0];}).join(". ")+".");
+      en.push("Finally, practice the ten important exam questions given in the notes. Thank you for learning with TPS Pharmacy Lab. Keep revising, and all the best for your examination.");
+      hi.push("TPS Pharmacy Lab में आपका स्वागत है। इस लेक्चर में हम "+topic+" पढ़ेंगे — "+p.subject+", "+p.code+", पैक "+S.pack+"।");
+      hi.push("चलिए परिचय से शुरू करते हैं। "+topic+" परीक्षा का एक महत्वपूर्ण विषय है, और हम इसे क्रम से, सरल भाषा में पढ़ेंगे।");
+      secs.forEach(function(s,i){
+        var h = HI_HEADINGS[s[0]]||s[0];
+        hi.push("बिंदु क्रमांक "+(i+1)+": "+h+"। "+(s[1]?s[1]+"। ":"")+"इस भाग को ध्यान से याद रखो, क्योंकि यह परीक्षा में बार-बार पूछा जाता है। सुनते समय स्क्रीन पर बना डायग्राम देखते रहो।");
+      });
+      hi.push("अब 'याद रखो' सारांश। "+secs.map(function(s){return HI_HEADINGS[s[0]]||s[0];}).join("। ")+"।");
+      hi.push("अंत में, नोट्स में दिए गए दस महत्वपूर्ण परीक्षा प्रश्नों का अभ्यास करो। TPS Pharmacy Lab के साथ पढ़ने के लिए धन्यवाद। दोहराते रहो, परीक्षा के लिए शुभकामनाएँ।");
+      pk.scriptEN = en.join("\n"); pk.scriptHI = hi.join("\n");
+      pk.srtEN = makeSRT(pk.scriptEN); pk.srtHI = makeSRT(pk.scriptHI);
+      pk.approved.script=false; save(); render();
+      toast("Script EN + HI aur dono .srt ready hain.");
+    }
+    function srtTime(sec){
+      var h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=Math.floor(sec%60), ms=Math.round((sec%1)*1000);
+      function z(n,l){ return String(n).padStart(l,"0"); }
+      return z(h,2)+":"+z(m,2)+":"+z(s,2)+","+z(ms,3);
+    }
+    function makeSRT(script){
+      var cues = String(script||"").split(/\n/).map(function(s){return s.trim();}).filter(Boolean);
+      var t=0, out=[];
+      cues.forEach(function(c,i){
+        var words = c.split(/\s+/).length;
+        var dur = Math.max(3, Math.min(14, words/2.4));
+        out.push(String(i+1)); out.push(srtTime(t)+" --> "+srtTime(t+dur)); out.push(c); out.push("");
+        t += dur + 0.4;
+      });
+      return out.join("\n");
+    }
+    /* ---- Slides from notes ---- */
+    function buildSlides(){
+      var pk=pack(); if(!pk.notesEN.trim()){ toast("Pehle notes banao — slides unhi se banti hain."); return; }
+      var p=proj(), slides=[];
+      slides.push({title:pk.topic.trim(), body:p.code+" · "+p.subject+"\nPack "+S.pack+" · TPS Pharmacy Lab"});
+      var cur=null;
+      pk.notesEN.split(/\n/).forEach(function(line){
+        var t=line.trim();
+        if(t.indexOf("## ")===0){ cur={title:t.slice(3).replace(/^\d+\.\s*/,""), body:""}; slides.push(cur); }
+        else if(cur && t && t.indexOf("# ")!==0){ cur.body += (cur.body?"\n":"") + "• " + t; }
+      });
+      slides = slides.filter(function(s,i){ return i===0 || s.body.trim(); });
+      slides.forEach(function(s){ if(s.body.length>620) s.body = s.body.slice(0,617)+"…"; });
+      pk.slides = slides; pk.approved.slides=false; save(); render();
+      toast(slides.length+" slides ready — preview dekho, edit karo, PPTX download karo.");
+    }
+    function downloadPPTX(){
+      var pk=pack(), p=proj();
+      if(!pk.slides.length){ toast("Pehle slides banao."); return; }
+      if(typeof PptxGenJS==="undefined"){ toast("PPTX library load nahi hui — thoda ruk kar dobara try karo."); return; }
+      var pptx = new PptxGenJS();
+      pptx.defineLayout({name:"W16x9", width:13.33, height:7.5}); pptx.layout="W16x9";
+      pk.slides.forEach(function(s,idx){
+        var sl = pptx.addSlide();
+        sl.background = {color:"0E2A47"};
+        sl.addShape("rect",{x:0,y:0,w:0.14,h:7.5,fill:{color:"C9A227"}});
+        sl.addText("tps",{x:11.7,y:0.25,w:1.3,h:0.5,fontSize:20,bold:true,color:"C9A227",align:"right"});
+        sl.addText(s.title||"",{x:0.7,y:0.7,w:11,h:1.4,fontSize:32,bold:true,color:"FFFFFF"});
+        sl.addText(s.body||"",{x:0.7,y:2.2,w:11.8,h:4.4,fontSize:17,color:"DBE7F5",lineSpacingMultiple:1.25});
+        sl.addText(String(idx+1)+" / "+pk.slides.length+" · TPS Pharmacy Lab",{x:9.3,y:6.9,w:3.7,h:0.4,fontSize:11,color:"9DB8D6",align:"right"});
+      });
+      pptx.writeFile({fileName:fileBase()+"_Slides.pptx"});
+      toast("PPTX download shuru ho gaya.");
+    }
+    </script>
+
+    <script>
+    "use strict";
+    /* ================= Canvas desks: Diagram / Handwritten / Thumbnail ================= */
+    function diagramLabelsFromNotes(){
+      var pk=pack(); var secs=parseKeyPoints(pk.keyPoints);
+      var labels=[pk.topic.trim()||"Topic"].concat(secs.map(function(s){return s[0];}));
+      pk.diagramLabels = labels.join("\n"); save();
+    }
+    function wrapText(ctx, text, x, y, maxW, lh){
+      var words=String(text).split(/\s+/), line="", lines=[];
+      words.forEach(function(w){ var test=line?line+" "+w:w;
+        if(ctx.measureText(test).width>maxW && line){ lines.push(line); line=w; } else line=test; });
+      if(line) lines.push(line);
+      lines.forEach(function(l,i){ ctx.fillText(l, x, y+i*lh); });
+      return lines.length;
+    }
+    function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+    function drawDiagram(){
+      var cv=document.getElementById("diagramCanvas"); if(!cv) return;
+      var pk=pack(), p=proj(); var ctx=cv.getContext("2d");
+      var W=cv.width, H=cv.height;
+      ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,W,H);
+      var labels=pk.diagramLabels.split(/\n/).map(function(s){return s.trim();}).filter(Boolean);
+      if(!labels.length){ ctx.fillStyle="#5a6a7a"; ctx.font="600 26px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("Pehle labels banao — 'Notes se labels lao' dabao", W/2, H/2); return; }
+      var root=labels[0], kids=labels.slice(1);
+      ctx.fillStyle="#0e2a47"; ctx.font="700 25px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center";
+      wrapText(ctx, root, W/2, 40, W-190, 30);
+      ctx.font="600 15px 'IBM Plex Sans',sans-serif"; ctx.fillStyle="#8a5a00";
+      ctx.fillText((p.code||"")+" · Pack "+S.pack+" · TPS Pharmacy Lab", W/2, 74);
+      function box(x,y,w,h,text,fill,ink){
+        ctx.beginPath(); roundRect(ctx,x,y,w,h,10); ctx.fillStyle=fill; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle="#0e2a47"; ctx.stroke();
+        ctx.fillStyle=ink; ctx.font="600 16px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center";
+        var lines=[]; var words=String(text).split(/\s+/), line="";
+        words.forEach(function(wd){ var t=line?line+" "+wd:wd; if(ctx.measureText(t).width>w-18&&line){lines.push(line);line=wd;}else line=t; });
+        if(line)lines.push(line);
+        var startY = y + h/2 - (lines.length-1)*10 + 5;
+        lines.slice(0,3).forEach(function(l,i){ ctx.fillText(l, x+w/2, startY+i*20); });
+      }
+      function arrow(x1,y1,x2,y2){
+        ctx.strokeStyle="#b8860b"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+        var ang=Math.atan2(y2-y1,x2-x1);
+        ctx.fillStyle="#b8860b"; ctx.beginPath(); ctx.moveTo(x2,y2);
+        ctx.lineTo(x2-11*Math.cos(ang-0.42), y2-11*Math.sin(ang-0.42)); ctx.lineTo(x2-11*Math.cos(ang+0.42), y2-11*Math.sin(ang+0.42)); ctx.closePath(); ctx.fill();
+      }
+      var type=pk.diagramType;
+      if(type==="flow" || type==="mechanism"){
+        var bw=430, bh=58, x=(W-bw)/2, gap=Math.min(30,(H-150)/(labels.length)), step=bh+gap, y=110;
+        if(type==="mechanism"){ x=70; bw=W-140; }
+        labels.forEach(function(l,i){
+          box(x, y, bw, bh, l, i===0?"#0e2a47":"#eef4fb", i===0?"#ffffff":"#17222e");
+          if(i<labels.length-1) arrow(W/2, y+bh, W/2, y+bh+gap-2);
+          y+=step;
+        });
+      } else if(type==="table"){
+        var x0=70,y0=120,rw=W-140,rh=54;
+        ctx.fillStyle="#0e2a47"; ctx.fillRect(x0,y0,rw,rh);
+        ctx.fillStyle="#fff"; ctx.font="700 19px 'IBM Plex Sans',sans-serif"; ctx.textAlign="left"; ctx.fillText(root, x0+16, y0+35);
+        kids.forEach(function(l,i){
+          var yy=y0+rh*(i+1); if(yy+rh>H-70) return;
+          ctx.fillStyle=i%2?"#ffffff":"#eef4fb"; ctx.fillRect(x0,yy,rw,rh);
+          ctx.strokeStyle="#b9c6d4"; ctx.lineWidth=1; ctx.strokeRect(x0,yy,rw,rh);
+          ctx.fillStyle="#17222e"; ctx.font="600 17px 'IBM Plex Sans',sans-serif";
+          ctx.fillText((i+1)+".  "+l, x0+16, yy+34);
+          ctx.fillStyle="#5a6a7a"; ctx.font="500 14px 'IBM Plex Sans',sans-serif"; ctx.textAlign="right";
+          ctx.fillText("Notes dekho — Pack "+S.pack, x0+rw-16, yy+34); ctx.textAlign="left";
+        });
+      } else { /* classification */
+        box(W/2-210, 100, 420, 64, root, "#0e2a47", "#ffffff");
+        var cols = kids.length<=4 ? Math.max(kids.length,1) : 4;
+        var bw2 = (W-80-(cols-1)*16)/cols;
+        kids.forEach(function(l,i){
+          var col=i%cols, row=Math.floor(i/cols);
+          var x=40+col*(bw2+16), yy=292+row*138;
+          arrow(W/2, 164, x+bw2/2, yy);
+          box(x, yy, bw2, 66, l, "#eef4fb", "#17222e");
+        });
+        if(kids.length){ ctx.fillStyle="#5a6a7a"; ctx.font="500 15px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center";
+          ctx.fillText("Har box ek heading hai — detail notes me padho.", W/2, H-26); }
+      }
+      /* watermark + logo */
+      ctx.save(); ctx.translate(W/2,H/2); ctx.rotate(-0.42); ctx.fillStyle="rgba(14,42,71,0.055)";
+      ctx.font="700 130px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("tps",0,44); ctx.restore();
+      ctx.beginPath(); ctx.arc(W-52,52,30,0,7); ctx.fillStyle="#0e2a47"; ctx.fill();
+      ctx.lineWidth=3; ctx.strokeStyle="#c9a227"; ctx.stroke();
+      ctx.fillStyle="#f5c542"; ctx.font="700 17px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("tps",W-52,58);
+    }
+    function downloadDiagram(){
+      var cv=document.getElementById("diagramCanvas"); if(!cv){ toast("Pehle diagram banao."); return; }
+      cv.toBlob(function(b){ download(fileBase()+"_Diagram.png", b); toast("Diagram PNG download ho gaya — tps watermark ke sath."); });
+    }
+    /* ---- Handwritten ---- */
+    function hwPages(){
+      var pk=pack(); var text = pk.hwLang==="HI" ? pk.notesHI : pk.notesEN;
+      var words = stripMarks(text).split(/\s+/).filter(Boolean);
+      var per=105, pages=[];
+      for(var i=0;i<words.length;i+=per) pages.push(words.slice(i,i+per).join(" "));
+      return pages.length?pages:[""];
+    }
+    function downloadHandwrittenPDF(){
+      var pk=pack(); var text = pk.hwLang==="HI" ? pk.notesHI : pk.notesEN;
+      if(!text.trim()){ toast("Pehle notes banao — handwritten unhi se banta hai."); return; }
+      if(!(window.jspdf && window.jspdf.jsPDF)){ toast("PDF library load nahi hui."); return; }
+      var pages=hwPages(), p=proj();
+      var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+      pages.forEach(function(pg,idx){
+        if(idx>0) doc.addPage();
+        doc.setDrawColor(190,205,230);
+        for(var y=90;y<790;y+=26){ doc.line(48,y,547,y); }
+        doc.setDrawColor(230,150,150); doc.line(64,40,64,800);
+        var lines=doc.splitTextToSize(pg, 470);
+        doc.setFont("times","normal"); doc.setFontSize(12.5); doc.setTextColor(30,45,95);
+        var yy=84; lines.forEach(function(l){ if(yy<795){ doc.text(l,70,yy); yy+=26; } });
+        doc.setFillColor(14,42,71); doc.circle(520,42,17,"F");
+        doc.setTextColor(245,197,66); doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.text("tps",520,45,{align:"center"});
+        doc.setTextColor(120); doc.setFontSize(8); doc.setFont("helvetica","normal");
+        doc.text((p.code||"")+" · Pack "+S.pack+" · Handwritten ("+pk.hwLang+")", 48, 40);
+        doc.text("Page "+(idx+1)+" / "+pages.length, 500, 822);
+        doc.setTextColor(235,238,242); doc.setFontSize(60); doc.text("tps", 300, 460, {align:"center", angle:24, opacity:0.06});
+        doc.setTextColor(0);
+      });
+      doc.save(fileBase()+"_Handwritten-"+pk.hwLang+".pdf");
+      toast("Handwritten PDF download ho gaya — har page par tps logo upar-right.");
+    }
+    /* ---- Thumbnail ---- */
+    function drawThumbnail(){
+      var cv=document.getElementById("thumbCanvas"); if(!cv) return;
+      var pk=pack(), p=proj(), ctx=cv.getContext("2d"), W=cv.width, H=cv.height;
+      ctx.fillStyle="rgb(5,58,48)"; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle="rgb(20,184,166)"; ctx.fillRect(0,0,W,58);
+      ctx.fillStyle="#ffffff"; ctx.font="700 25px 'IBM Plex Sans',sans-serif"; ctx.textAlign="left";
+      ctx.fillText("TPS PHARMACY LAB", 34, 39);
+      ctx.textAlign="right"; ctx.font="600 20px 'IBM Plex Sans',sans-serif";
+      ctx.fillText("Learn Pharmacy the Easy Way", W-34, 39); ctx.textAlign="left";
+      ctx.fillStyle="#7dd3c8"; ctx.font="700 24px 'IBM Plex Sans',sans-serif";
+      ctx.fillText("D.PHARM · "+(p.code||""), 44, 128);
+      ctx.fillStyle="#ffffff"; ctx.font="700 62px 'IBM Plex Sans',sans-serif";
+      var used = wrapText(ctx, pk.topic||"Topic yahan likho", 44, 205, 770, 74);
+      var yAfter = 205 + used*74;
+      ctx.fillStyle="#d9f2ec"; ctx.font="500 30px 'IBM Plex Sans',sans-serif";
+      ctx.fillText((p.subject||"")+" · Pack "+S.pack, 44, Math.max(yAfter+16, 430));
+      /* language pill */
+      var isEN = pk.thumbLang==="EN";
+      ctx.beginPath(); roundRect(ctx, 44, 520, 250, 74, 37);
+      ctx.fillStyle = isEN ? "#2563eb" : "#dc2626"; ctx.fill();
+      ctx.fillStyle="#ffffff"; ctx.font="700 34px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center";
+      ctx.fillText(isEN?"ENGLISH":"HINDI", 44+125, 570); ctx.textAlign="left";
+      ctx.fillStyle="#9fd8cf"; ctx.font="500 22px 'IBM Plex Sans',sans-serif";
+      ctx.fillText(p.year||"", 320, 566);
+      /* photo circle / logo circle */
+      var cx=1065, cy=360, r=165;
+      ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.clip();
+      if(pk.thumbPhoto && drawThumbnail._img){
+        var img=drawThumbnail._img, s=Math.max((r*2)/img.width,(r*2)/img.height);
+        ctx.drawImage(img, cx-img.width*s/2, cy-img.height*s/2, img.width*s, img.height*s);
+      } else { ctx.fillStyle="#0b4f43"; ctx.fillRect(cx-r,cy-r,r*2,r*2);
+        ctx.fillStyle="#f5c542"; ctx.font="700 64px 'IBM Plex Sans',sans-serif"; ctx.textAlign="center"; ctx.fillText("tps",cx,cy+22); ctx.textAlign="left"; }
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.lineWidth=7; ctx.strokeStyle="#f5c542"; ctx.stroke();
+      ctx.fillStyle="#0b352c"; ctx.fillRect(0,H-64,W,64);
+      ctx.fillStyle="#e8f6f2"; ctx.font="600 21px 'IBM Plex Sans',sans-serif";
+      ctx.fillText("tps  ·  TPS Pharmacy Lab  ·  Lectures & Notes", 34, H-24);
+    }
+    function loadThumbPhoto(){
+      var pk=pack();
+      if(pk.thumbPhoto){ var img=new Image(); img.onload=function(){ drawThumbnail._img=img; drawThumbnail(); }; img.src=pk.thumbPhoto; }
+      else { drawThumbnail._img=null; drawThumbnail(); }
+    }
+    function onThumbPhoto(ev){
+      var f=ev.target.files && ev.target.files[0]; if(!f) return;
+      var rd=new FileReader();
+      rd.onload=function(){
+        var img=new Image();
+        img.onload=function(){
+          var c=document.createElement("canvas"); var s=Math.min(1, 360/img.width);
+          c.width=img.width*s; c.height=img.height*s; c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+          pack().thumbPhoto=c.toDataURL("image/jpeg",0.85); save(); render();
+          toast("Photo lag gaya — thumbnail dobara ban gaya.");
+        };
+        img.src=rd.result;
+      };
+      rd.readAsDataURL(f);
+    }
+    function downloadThumbnail(){
+      var cv=document.getElementById("thumbCanvas"); if(!cv){ toast("Thumbnail canvas nahi mila."); return; }
+      cv.toBlob(function(b){ download(fileBase()+"_Thumbnail-"+pack().thumbLang+".png", b); toast("Thumbnail PNG download ho gaya (fixed teal template)."); });
+    }
+    /* ---- Video Pack zip ---- */
+    function downloadVideoPack(){
+      var pk=pack(), p=proj();
+      if(typeof JSZip==="undefined"){ toast("ZIP library load nahi hui — thoda ruk kar try karo."); return; }
+      var zip=new JSZip();
+      var base=fileBase();
+      zip.file(base+"_Notes-EN.txt", pk.notesEN||"");
+      zip.file(base+"_Notes-HI.txt", pk.notesHI||"");
+      zip.file(base+"_Script-EN.txt", pk.scriptEN||"");
+      zip.file(base+"_Script-HI.txt", pk.scriptHI||"");
+      zip.file(base+"_Subtitles-EN.srt", pk.srtEN||"");
+      zip.file(base+"_Subtitles-HI.srt", pk.srtHI||"");
+      zip.file(base+"_Slides-Outline.txt", pk.slides.map(function(s,i){ return "SLIDE "+(i+1)+": "+s.title+"\n"+s.body+"\n"; }).join("\n"));
+      zip.file("README.txt",
+        "TPS LECTURE FACTORY — VIDEO PACK\n"+
+        "Subject: "+p.subject+" ("+p.code+") · Pack "+S.pack+" · Topic: "+pk.topic+"\n\n"+
+        "Is pack me hai: Notes EN/HI, Script EN/HI, Subtitles .srt EN/HI, Slides outline.\n"+
+        "Slides ka asal PPTX Slides Desk se alag se download karo aur is pack ke sath rakho.\n\n"+
+        "FINAL MP4: Full HD (1920x1080) video Babu ke Python + FFmpeg system par banti hai —\n"+
+        "browser me video render nahi hota. Ye pack hi us render ke liye bheja jata hai.\n"+
+        "Format: upar slide, neeche kaali strip me bade subtitles, fixed calm Indian male voice.\n"+
+        "Har video me source line rehti hai — koi test humne kiya ho, aisa claim kabhi nahi.");
+      zip.generateAsync({type:"blob"}).then(function(b){
+        download(base+"_Video-Pack.zip", b);
+        toast("Video Pack .zip download ho gaya — final MP4 Babu ke FFmpeg system se banege.");
+      });
+    }
+    </script>
+
+    <script>
+    "use strict";
+    /* ================= Rendering ================= */
+    var app = document.getElementById("app");
+    function render(){
+      var p=proj();
+      if(!p){ renderDashboard(); } else { renderProject(); }
+      save();
+    }
+    function renderDashboard(){
+      var html="";
+      html+='<span class="badge">TPS · TPS Pharmacy Lab</span>';
+      html+='<h1 style="margin-top:8px">TPS Lecture Factory</h1>';
+      html+='<p class="muted"><b>Lecture Projects</b> — har subject = ek project, usme 5 Pack (A–E), har pack me 8 station — one by one: banaao, dekho, edit karo, <b>Approve</b> karo, next.</p>';
+      html+='<div class="card"><h2>Naya Project banao</h2>';
+      html+='<div class="grid3">';
+      html+='<div><label class="flabel" for="npSubject">Subject ka naam</label><input type="text" id="npSubject" placeholder="e.g. Community Pharmacy and Management"></div>';
+      html+='<div><label class="flabel" for="npCode">Course code</label><input type="text" id="npCode" placeholder="e.g. ER20-22T"></div>';
+      html+='<div><label class="flabel" for="npYear">Year</label><select id="npYear"><option>D.Pharm 1st Year</option><option>D.Pharm 2nd Year</option><option>B.Pharm</option><option>Other</option></select></div>';
+      html+='</div><div class="row" style="margin-top:14px"><button class="btn" onclick="createProject()">+ Project banao</button>';
+      html+='<span class="small muted">Projects isi browser me save hote hain — isi device par dobara khulenge.</span></div></div>';
+      if(!S.projects.length){
+        html+='<div class="empty"><b>Abhi koi project nahi hai.</b><br>Upar subject ka naam aur course code daal kar pehla project banao — 5 Pack (A–E) apne aap ban jayenge, har pack me 8 station ready milenge.</div>';
+      } else {
+        html+='<div class="proj-grid">';
+        S.projects.forEach(function(p){
+          html+='<div class="proj-card"><h3>'+esc(p.subject)+'</h3>';
+          html+='<div class="small muted">'+esc(p.code)+' · '+esc(p.year)+'</div>';
+          html+='<div class="bar"><i style="width:'+projProgress(p)+'%"></i></div>';
+          html+='<div class="small muted">Overall progress: <b>'+projProgress(p)+'%</b> approved</div>';
+          html+='<div class="packchips">'+PACKS.map(function(k){ var pr=packProgress(p.packs[k]);
+            return '<span class="pchip'+(pr===100?" done":"")+'">Pack '+k+' · <b>'+pr+'%</b></span>'; }).join("")+'</div>';
+          html+='<div class="row"><button class="btn" onclick="openProject(\''+p.id+'\')">Kholo →</button>';
+          html+='<button class="btn danger sm" onclick="deleteProject(\''+p.id+'\')">Delete</button></div></div>';
+        });
+        html+='</div>';
+      }
+      app.innerHTML=html;
+    }
+    function createProject(){
+      var s=document.getElementById("npSubject").value.trim(), c=document.getElementById("npCode").value.trim(), y=document.getElementById("npYear").value;
+      if(!s||!c){ toast("Subject ka naam aur course code — dono zaroori hain."); return; }
+      var p=blankProject(s,c,y); S.projects.push(p); S.cur=p.id; S.pack="A"; S.station="notes";
+      save(); render(); toast("Project ban gaya — Pack A se shuru karo.");
+    }
+    function openProject(id){ S.cur=id; S.pack="A"; S.station="notes"; render(); }
+    function deleteProject(id){
+      var p=S.projects.find(function(x){return x.id===id;});
+      if(!confirmDelete(p)) return;
+      S.projects=S.projects.filter(function(x){return x.id!==id;});
+      if(S.cur===id) S.cur=null; save(); render(); toast("Project delete ho gaya.");
+    }
+    var _delArm=null;
+    function confirmDelete(p){
+      if(_delArm===p.id){ _delArm=null; return true; }
+      _delArm=p.id; toast("Pakka delete karna hai? Ek baar aur Delete dabao — '"+(p?p.subject:"")+"' ka saara kaam mit jayega.");
+      setTimeout(function(){ _delArm=null; },3500); return false;
+    }
+    function backToDash(){ S.cur=null; render(); }
+    function setPack(k){ S.pack=k; render(); }
+    function setStation(id){ S.station=id; render(); }
+    function renderProject(){
+      var p=proj(), pk=pack();
+      var html="";
+      html+='<button class="btn ghost sm backbtn" onclick="backToDash()">← Saare Projects</button>';
+      html+='<h1>'+esc(p.subject)+'</h1>';
+      html+='<p class="muted">'+esc(p.code)+' · '+esc(p.year)+' · Overall <b>'+projProgress(p)+'%</b> approved</p>';
+      html+='<div class="packtabs">'+PACKS.map(function(k){
+        return '<button class="packtab'+(k===S.pack?" on":"")+'" onclick="setPack(\''+k+'\')">Pack '+k+'<small>'+packProgress(p.packs[k])+'% done</small></button>';
+      }).join("")+'</div>';
+      html+='<div class="card flat" style="padding:13px 16px"><label class="flabel" for="pkChapters">Pack '+S.pack+' — is pack ke chapters (syllabus se)</label>';
+      html+='<input type="text" id="pkChapters" value="'+esc(pk.chapters)+'" placeholder="e.g. Ch 1 + 2 + 3" oninput="upd(\'chapters\',this.value)"></div>';
+      html+='<div class="steps">'+STATIONS.map(function(st,i){
+        var done=pk.approved[st.id], has=hasContent(pk,st.id);
+        return '<button class="stepbtn'+(S.station===st.id?" on":"")+(done?" done":"")+'" onclick="setStation(\''+st.id+'\')">'
+          +'<span class="n">'+(done?"✓":(i+1))+'</span>'+st.name+(has&&!done?'<span class="dot" title="Content ready, approve baki"></span>':"")+'</button>';
+      }).join("")+'</div>';
+      html+='<div id="stationPanel"></div>';
+      app.innerHTML=html;
+      renderStation();
+    }
+    function upd(field, val){ var pk=pack(); pk[field]=val; save(); }
+    function updThumbLang(v){ pack().thumbLang=v; save(); drawThumbnail(); markDirty("thumbnail"); }
+    function markDirty(id){ var pk=pack(); if(pk.approved[id]){ pk.approved[id]=false; save(); render(); } }
+    function approve(id){
+      var pk=pack();
+      if(id==="notes" && !pk.notesEN.trim()){ toast("Approve se pehle notes banao."); return; }
+      if(id==="diagram" && !pk.diagramLabels.trim()){ toast("Approve se pehle diagram labels banao."); return; }
+      if(id==="slides" && !pk.slides.length){ toast("Approve se pehle slides banao."); return; }
+      if(id==="script" && !pk.scriptEN.trim()){ toast("Approve se pehle script banao."); return; }
+      pk.approved[id]=true; save();
+      var idx=STATIONS.findIndex(function(s){return s.id===id;});
+      if(idx<STATIONS.length-1){ S.station=STATIONS[idx+1].id; render(); toast("Station approve ho gaya — agla station khul gaya."); }
+      else { render(); toast("Pack "+S.pack+" ke saare station approve! Ab Publish checklist poori karo ya agla Pack chuno."); }
+    }
+    function stationHead(st, approved){
+      return '<div class="station-head"><div><span class="badge'+(approved?" ok":"")+'">'+(approved?"Approved ✓":"Station · Pack "+S.pack)+'</span>'
+        +'<h2 style="margin-top:8px">'+st.hi+'</h2></div>'
+        +'<button class="btn '+(approved?"approved":"gold")+'" onclick="approve(\''+st.id+'\')">'+(approved?"Approved ✓":"Approve karo →")+'</button></div>';
+    }
+    function stationFoot(id){
+      var idx=STATIONS.findIndex(function(s){return s.id===id;});
+      var next = idx<STATIONS.length-1 ? STATIONS[idx+1] : null;
+      return '<div class="stationfoot"><span class="small muted">Kaam auto-save hota rehta hai (isi browser me).</span>'
+        +(next?'<button class="btn ghost" onclick="setStation(\''+next.id+'\')">Next: '+next.name+' →</button>':"")+'</div>';
+    }
+    function renderStation(){
+      var panel=document.getElementById("stationPanel"); if(!panel) return;
+      var pk=pack(), p=proj();
+      var st=STATIONS.find(function(s){return s.id===S.station;});
+      var h='<div class="card">'+stationHead(st, pk.approved[st.id]);
+      if(S.station==="notes"){
+        h+='<div class="grid2"><div>'
+          +'<label class="flabel" for="pkTopic">Topic</label><input type="text" id="pkTopic" value="'+esc(pk.topic)+'" placeholder="e.g. Community Pharmacy — Definition, History and Development" oninput="upd(\'topic\',this.value)">'
+          +'<label class="flabel" for="topicFile">Topic / syllabus file upload (.txt)</label><input type="file" id="topicFile" accept=".txt,text/plain" onchange="onTopicFile(event)">'
+          +'<p class="small muted" style="margin-top:6px">File ka text neeche Key Points me aa jayega — ek line = ek heading. "Heading: detail" likhoge to detail notes me jud jayegi.</p>'
+          +'</div><div>'
+          +'<label class="flabel" for="pkKeys">Key Points / Headings (ek line = ek heading)</label>'
+          +'<textarea id="pkKeys" rows="7" placeholder="Khali chhodo to pharmacy ke fixed 8 headings apne aap lagenge:\nDefinition and Introduction\nClassification\nMechanism of Action\nDose and Administration\nTherapeutic Uses\nAdverse Effects\nContraindications and Precautions\nStorage and Patient Counselling" oninput="upd(\'keyPoints\',this.value)">'+esc(pk.keyPoints)+'</textarea>'
+          +'</div></div>'
+          +'<div class="row" style="margin:14px 0"><button class="btn" onclick="buildNotesEN()">Notes Banao (English)</button>'
+          +'<button class="btn teal" onclick="buildNotesHI()">Hindi Notes Banao (Devanagari)</button></div>'
+          +'<div class="grid2"><div><label class="flabel" for="notesEN">English Notes — padho aur edit karo</label>'
+          +'<textarea id="notesEN" class="code" rows="16" oninput="upd(\'notesEN\',this.value)">'+esc(pk.notesEN)+'</textarea>'
+          +'<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="downloadNotesWord(\'EN\')">Word (.doc) EN</button><button class="btn ghost sm" onclick="downloadNotesPDF(\'EN\')">PDF EN</button></div></div>'
+          +'<div><label class="flabel" for="notesHI">Hindi Notes (Devanagari)</label>'
+          +'<textarea id="notesHI" class="code" rows="16" oninput="upd(\'notesHI\',this.value)">'+esc(pk.notesHI)+'</textarea>'
+          +'<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="downloadNotesWord(\'HI\')">Word (.doc) HI</button><button class="btn ghost sm" onclick="downloadNotesPDF(\'HI\')">PDF HI</button></div></div></div>'
+          +(pk.notesEN?'<label class="flabel">Notes Preview</label><div class="preview">'+renderNotesPreview(pk.notesEN)+'</div>':"")
+          +'<div class="notebox">Fixed format: Title → Introduction → numbered headings → <b>Yaad Rakho</b> → <b>Practice Karo</b> → Summary → <b>10 Important Exam Questions</b>. Notes approve hote hi aage ke saare desk inhi notes se kaam karenge — baar-baar paste nahi karna padega.</div>';
+      }
+      if(S.station==="diagram"){
+        h+='<div class="grid2"><div>'
+          +'<label class="flabel" for="dgType">Diagram type</label><select id="dgType" onchange="upd(\'diagramType\',this.value);drawDiagram()">'
+          +'<option value="classification"'+(pk.diagramType==="classification"?" selected":"")+'>Classification Chart</option>'
+          +'<option value="mechanism"'+(pk.diagramType==="mechanism"?" selected":"")+'>Mechanism (chain)</option>'
+          +'<option value="flow"'+(pk.diagramType==="flow"?" selected":"")+'>Flow Chart</option>'
+          +'<option value="table"'+(pk.diagramType==="table"?" selected":"")+'>Table</option></select>'
+          +'<label class="flabel" for="dgLabels">Labels (pehli line = title/root, baaki lines = boxes)</label>'
+          +'<textarea id="dgLabels" rows="9" oninput="upd(\'diagramLabels\',this.value)">'+esc(pk.diagramLabels)+'</textarea>'
+          +'<div class="row" style="margin-top:8px"><button class="btn" onclick="diagramLabelsFromNotes();render()">Notes se labels lao</button>'
+          +'<button class="btn ghost" onclick="drawDiagram()">Diagram dobara banao</button></div>'
+          +'<div class="row" style="margin-top:8px"><button class="btn teal" onclick="downloadDiagram()">PNG Download</button>'
+          +'<button class="btn ghost" onclick="addDiagramToNotes()">Diagram notes me jodo</button></div>'
+          +(pk.diagramInNotes?'<div class="okbox">Diagram ka reference notes ke end me jud gaya hai ✓</div>':"")
+          +'</div><div><label class="flabel">Diagram Preview (tps watermark ke sath)</label>'
+          +'<canvas id="diagramCanvas" class="stage" width="1000" height="640"></canvas></div></div>';
+      }
+      if(S.station==="handwritten"){
+        var pages=hwPages(); var pg=Math.min(pk.hwPage, pages.length-1); if(pg<0)pg=0;
+        h+='<div class="row"><label class="flabel" style="margin:0" for="hwLang">Source notes</label>'
+          +'<select id="hwLang" style="width:auto" onchange="upd(\'hwLang\',this.value);pack().hwPage=0;render()">'
+          +'<option value="EN"'+(pk.hwLang==="EN"?" selected":"")+'>English Notes</option><option value="HI"'+(pk.hwLang==="HI"?" selected":"")+'>Hindi Notes</option></select>'
+          +'<button class="btn" onclick="downloadHandwrittenPDF()">Handwritten PDF Download</button></div>'
+          +'<p class="small muted" style="margin-top:10px">Har page: upar-right kone me solid <b>tps logo</b>, beech me halka watermark, neeche page number — bilkul fixed format.</p>'
+          +'<div class="hwpage"><div class="hwlogo">tps</div><div class="hwwm">tps</div>'
+          +'<div class="hwhead">'+esc(p.code)+' · Pack '+S.pack+' · Handwritten ('+pk.hwLang+')</div>'
+          +esc(pages[pg]||"Pehle Notes Desk se notes banao — handwritten unhi se banege.")
+          +'<div class="hwpageno">Page '+(pg+1)+' / '+pages.length+'</div></div>'
+          +'<div class="row" style="margin-top:10px"><button class="btn ghost sm" onclick="hwNav(-1)">← Pichla page</button>'
+          +'<span class="small muted">Page '+(pg+1)+' / '+pages.length+'</span>'
+          +'<button class="btn ghost sm" onclick="hwNav(1)">Agla page →</button></div>';
+      }
+      if(S.station==="slides"){
+        h+='<div class="row"><button class="btn" onclick="buildSlides()">Notes se Slides Banao</button>'
+          +'<button class="btn teal" onclick="downloadPPTX()">Asal PPTX Download</button></div>'
+          +'<p class="small muted" style="margin-top:8px">Navy/Gold fixed design, har slide par upar-right <b>tps</b>. Slide ka title/body edit kar sakte ho — PPTX edited version se hi banege.</p>';
+        if(pk.slides.length){
+          var idx=Math.min(pk._slideIdx||0, pk.slides.length-1);
+          h+='<div class="slideprev"><div class="slogo">tps</div><h3>'+esc(pk.slides[idx].title)+'</h3><div class="sbody">'+esc(pk.slides[idx].body)+'</div><div class="snum">'+(idx+1)+' / '+pk.slides.length+'</div></div>'
+            +'<div class="row" style="margin:10px 0"><button class="btn ghost sm" onclick="slideNav(-1)">← Pichli slide</button><button class="btn ghost sm" onclick="slideNav(1)">Agli slide →</button>'
+            +'<button class="btn danger sm" onclick="deleteSlide()">Ye slide hatao</button></div>'
+            +'<div class="grid2"><div><label class="flabel" for="slTitle">Slide title</label><input type="text" id="slTitle" value="'+esc(pk.slides[idx].title)+'" oninput="slideEdit(\'title\',this.value)"></div>'
+            +'<div><label class="flabel" for="slBody">Slide body</label><textarea id="slBody" rows="5" oninput="slideEdit(\'body\',this.value)">'+esc(pk.slides[idx].body)+'</textarea></div></div>';
+        } else {
+          h+='<div class="empty">Abhi slides nahi bani. Notes ready hain to upar wala button dabao.</div>';
+        }
+      }
+      if(S.station==="script"){
+        h+='<div class="row"><button class="btn" onclick="buildScripts()">Script + Subtitle Banao</button></div>'
+          +'<div class="grid2" style="margin-top:12px"><div><label class="flabel" for="scEN">Lecture Script — English</label>'
+          +'<textarea id="scEN" class="code" rows="13" oninput="upd(\'scriptEN\',this.value)">'+esc(pk.scriptEN)+'</textarea>'
+          +'<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="dlText(fileBase()+\'_Script-EN.txt\',pack().scriptEN)">Script EN .txt</button>'
+          +'<button class="btn ghost sm" onclick="refreshSRT(\'EN\')">SRT EN dobara banao</button><button class="btn ghost sm" onclick="dlText(fileBase()+\'_Subtitles-EN.srt\',pack().srtEN)">.srt EN Download</button></div></div>'
+          +'<div><label class="flabel" for="scHI">Lecture Script — Hindi (Devanagari)</label>'
+          +'<textarea id="scHI" class="code" rows="13" oninput="upd(\'scriptHI\',this.value)">'+esc(pk.scriptHI)+'</textarea>'
+          +'<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="dlText(fileBase()+\'_Script-HI.txt\',pack().scriptHI)">Script HI .txt</button>'
+          +'<button class="btn ghost sm" onclick="refreshSRT(\'HI\')">SRT HI dobara banao</button><button class="btn ghost sm" onclick="dlText(fileBase()+\'_Subtitles-HI.srt\',pack().srtHI)">.srt HI Download</button></div></div></div>'
+          +'<div class="notebox">Script edit karne ke baad <b>"SRT dobara banao"</b> dabana — subtitle timings edited script se phir ban jayenge. YouTube par dono tracks (EN + HI) lagte hain.</div>';
+      }
+      if(S.station==="video"){
+        h+='<div class="notebox"><b>Imandari wali baat:</b> Full HD (1920×1080) video FFmpeg se banti hai — wo browser ke liye bahut bhaari hai, isliye yahan koi jhootha "Video ban gaya" button nahi hai. Ye desk poora <b>Video Pack</b> deta hai; final MP4 Babu ke Python/FFmpeg system par banege, jaise ab bante hain.</div>'
+          +'<h3>Is pack ka Video Pack</h3><div class="preview" style="max-height:none">'
+          +'<ul><li>Notes EN + HI — '+(pk.notesEN?"ready ✓":"baki")+'</li>'
+          +'<li>Script EN + HI — '+(pk.scriptEN?"ready ✓":"baki")+'</li>'
+          +'<li>Subtitles .srt EN + HI — '+(pk.srtEN?"ready ✓":"baki")+'</li>'
+          +'<li>Slides outline ('+pk.slides.length+' slides) — asal PPTX Slides Desk se alag download karo</li>'
+          +'<li>README — render format (upar slide, neeche subtitle strip, fixed voice, source line)</li></ul></div>'
+          +'<div class="row" style="margin-top:12px"><button class="btn" onclick="downloadVideoPack()">Video Pack .zip Download</button></div>';
+      }
+      if(S.station==="thumbnail"){
+        h+='<div class="grid2"><div>'
+          +'<label class="flabel">Language pill</label><div class="row">'
+          +'<button class="btn sm '+(pk.thumbLang==="EN"?"":"ghost")+'" onclick="updThumbLang(\'EN\')">ENGLISH (blue)</button>'
+          +'<button class="btn sm '+(pk.thumbLang==="HI"?"":"ghost")+'" style="'+(pk.thumbLang==="HI"?"background:#dc2626;border-color:#dc2626":"")+'" onclick="updThumbLang(\'HI\')">HINDI (red)</button></div>'
+          +'<label class="flabel" for="thPhoto">Apni photo (circle me lagegi)</label><input type="file" id="thPhoto" accept="image/*" onchange="onThumbPhoto(event)">'
+          +'<p class="small muted" style="margin-top:6px">Topic Notes Desk wala hi use hota hai — wahan badloge to thumbnail par bhi badal jayega. Photo na do to tps logo wala circle lagega.</p>'
+          +'<div class="row" style="margin-top:10px"><button class="btn ghost" onclick="drawThumbnail();toast(\'Thumbnail dobara ban gaya.\')">Dobara banao</button>'
+          +'<button class="btn teal" onclick="downloadThumbnail()">Thumbnail PNG Download</button></div>'
+          +'<div class="notebox">Fixed D.Pharm template: deep teal-green background, teal top bar, ENGLISH blue / HINDI red pill, photo circle, tps strip — har video par bilkul same.</div>'
+          +'</div><div><label class="flabel">Thumbnail Preview (1280×720)</label>'
+          +'<canvas id="thumbCanvas" class="stage" width="1280" height="720"></canvas></div></div>';
+      }
+      if(S.station==="publish"){
+        var tEN = publishTitle("EN"), tHI = publishTitle("HI");
+        h+='<div class="grid2"><div><label class="flabel">YouTube Title — English video</label><div class="copyblock">'+esc(tEN)+'</div>'
+          +'<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="copyText(publishTitle(\'EN\'))">Title copy karo</button>'
+          +'<button class="btn ghost sm" onclick="copyText(publishDesc(\'EN\'))">Description copy karo</button></div></div>'
+          +'<div><label class="flabel">YouTube Title — Hindi video</label><div class="copyblock">'+esc(tHI)+'</div>'
+          +'<div class="row" style="margin-top:8px"><button class="btn ghost sm" onclick="copyText(publishTitle(\'HI\'))">Title copy karo</button>'
+          +'<button class="btn ghost sm" onclick="copyText(publishDesc(\'HI\'))">Description copy karo</button></div></div></div>'
+          +'<label class="flabel">Description preview (English)</label><div class="copyblock">'+esc(publishDesc("EN"))+'</div>'
+          +'<hr class="divider"><h3>Publish Checklist — Pack '+S.pack+'</h3>'
+          + PUBLISH_ITEMS.map(function(item,i){
+              var done=pk.publishChecks[i];
+              return '<button class="checkitem'+(done?" done":"")+'" onclick="toggleCheck('+i+')"><span class="box">'+(done?"✓":"")+'</span><span class="ctext">'+esc(item)+'</span></button>';
+            }).join("")
+          +'<p class="small muted">Checklist poori hone par upar <b>Approve</b> dabao — Pack '+S.pack+' publish-ready mana jayega.</p>';
+      }
+      h+=stationFoot(st.id);
+      h+='</div>';
+      panel.innerHTML=h;
+      if(S.station==="diagram") drawDiagram();
+      if(S.station==="thumbnail") loadThumbPhoto();
+    }
+    function onTopicFile(ev){
+      var f=ev.target.files && ev.target.files[0]; if(!f) return;
+      var rd=new FileReader();
+      rd.onload=function(){
+        var pk=pack(); var txt=String(rd.result||"");
+        var first=txt.split(/\n/).map(function(s){return s.trim();}).filter(Boolean)[0];
+        if(first && !pk.topic) pk.topic=first.replace(/^#+\s*/,"");
+        pk.keyPoints=txt; save(); render();
+        toast("File padh li — topic aur key points bhar gaye. Ab 'Notes Banao' dabao.");
+      };
+      rd.readAsText(f);
+    }
+    function addDiagramToNotes(){
+      var pk=pack();
+      if(!pk.notesEN.trim()){ toast("Pehle notes banao."); return; }
+      if(!pk.diagramInNotes){
+        pk.notesEN += "\n\n## Diagram\n[Diagram: "+(pk.topic||"Topic")+" — "+pk.diagramType+" chart, labels: "+pk.diagramLabels.split(/\n/).filter(Boolean).join(" · ")+"]\n(Diagram PNG is pack ke Diagram Desk se download karke notes ke is page par lagao.)";
+        if(pk.notesHI.trim()) pk.notesHI += "\n\n## डायग्राम\n[डायग्राम: "+(pk.topic||"Topic")+" — Diagram Desk se PNG download karke yahan lagao।]";
+        pk.diagramInNotes=true; save();
+      }
+      toast("Diagram ka reference notes me jud gaya ✓");
+      render();
+    }
+    function hwNav(d){ var pk=pack(); var n=hwPages().length; pk.hwPage=Math.max(0,Math.min(n-1,(pk.hwPage||0)+d)); save(); render(); }
+    function slideNav(d){ var pk=pack(); pk._slideIdx=Math.max(0,Math.min(pk.slides.length-1,(pk._slideIdx||0)+d)); save(); render(); }
+    function slideEdit(f,v){ var pk=pack(); var i=pk._slideIdx||0; if(pk.slides[i]){ pk.slides[i][f]=v; save();
+      var pv=document.querySelector(".slideprev"); if(pv){ if(f==="title") pv.querySelector("h3").textContent=v; else pv.querySelector(".sbody").textContent=v; } } }
+    function deleteSlide(){ var pk=pack(); var i=pk._slideIdx||0; pk.slides.splice(i,1); pk._slideIdx=0; save(); render(); toast("Slide hat gayi."); }
+    function refreshSRT(lang){ var pk=pack(); if(lang==="EN") pk.srtEN=makeSRT(pk.scriptEN); else pk.srtHI=makeSRT(pk.scriptHI); save(); render(); toast("SRT "+lang+" edited script se dobara ban gaya."); }
+    function toggleCheck(i){ var pk=pack(); pk.publishChecks[i]=!pk.publishChecks[i]; save(); render(); }
+    function publishTitle(lang){
+      var p=proj(), pk=pack();
+      return (pk.topic||"Topic")+" | "+p.code+" "+p.subject+" | D.Pharm Lecture in "+(lang==="EN"?"English":"Hindi")+" | Pack "+S.pack+" | TPS Pharmacy Lab";
+    }
+    function publishDesc(lang){
+      var p=proj(), pk=pack();
+      var en = (pk.topic||"")+"\n"+p.subject+" ("+p.code+") — Pack "+S.pack+(pk.chapters?(" · Chapters: "+pk.chapters):"")+"\n\nIs lecture me aap padhenge:\n"+parseKeyPoints(pk.keyPoints).map(function(s){return "• "+s[0];}).join("\n")
+        +"\n\nNotes, handwritten PDF aur diagrams ke liye video description ke links dekho.\nTPS Pharmacy Lab — Learn Pharmacy the Easy Way.\n\n#DPharm #Pharmacy #"+(p.code||"").replace(/[^A-Za-z0-9]/g,"")+" #TPSPharmacyLab";
+      var hi = (pk.topic||"")+"\n"+p.subject+" ("+p.code+") — पैक "+S.pack+(pk.chapters?(" · अध्याय: "+pk.chapters):"")+"\n\nइस लेक्चर में आप पढ़ेंगे:\n"+parseKeyPoints(pk.keyPoints).map(function(s){return "• "+(HI_HEADINGS[s[0]]||s[0]);}).join("\n")
+        +"\n\nनोट्स, हस्तलिखित PDF और डायग्राम के लिए वीडियो विवरण के लिंक देखो।\nTPS Pharmacy Lab — Learn Pharmacy the Easy Way.\n\n#DPharm #Pharmacy #"+(p.code||"").replace(/[^A-Za-z0-9]/g,"")+" #TPSPharmacyLab";
+      return lang==="EN"?en:hi;
+    }
+    function copyText(t){
+      function done(){ toast("Copy ho gaya — YouTube par paste kar do."); }
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done, function(){ fallback(); }); }
+      else fallback();
+      function fallback(){ var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select();
+        try{ document.execCommand("copy"); done(); }catch(e){ toast("Copy nahi hua — text select karke khud copy karo."); } ta.remove(); }
+    }
+    load();
+    if(S.cur && !proj()) S.cur=null;
+    render();
+    </script>
+  </body>
+</html>
